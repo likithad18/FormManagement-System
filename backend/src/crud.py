@@ -2,7 +2,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from .models import Submission
 from .schemas import SubmissionCreate, SubmissionUpdate
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, and_, desc, asc
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
@@ -10,18 +10,32 @@ def get_submission(db: Session, submission_id: int):
     result = db.execute(select(Submission).where(Submission.id == submission_id))
     return result.scalar_one_or_none()
 
-def get_submissions(db: Session, skip: int = 0, limit: int = 20, search: str = None):
+def get_submissions(db: Session, skip: int = 0, limit: int = 20, search: str = None, age: int = None, preferred_contact: str = None, created_from: str = None, created_to: str = None, sort_by: str = None, sort_order: str = None):
     query = select(Submission)
+    filters = []
     if search:
-        query = query.where(
-            or_(
-                Submission.full_name.ilike(f"%{search}%"),
-                Submission.email.ilike(f"%{search}%")
-            )
-        )
+        filters.append(or_(Submission.full_name.ilike(f"%{search}%"), Submission.email.ilike(f"%{search}%")))
+    if age:
+        filters.append(Submission.age == age)
+    if preferred_contact:
+        filters.append(Submission.preferred_contact == preferred_contact)
+    if created_from:
+        filters.append(Submission.created_at >= created_from)
+    if created_to:
+        filters.append(Submission.created_at <= created_to)
+    if filters:
+        query = query.where(and_(*filters))
+    # Sorting
+    if sort_by in ["created_at", "full_name", "age"]:
+        sort_col = getattr(Submission, sort_by)
+        if sort_order == "asc":
+            query = query.order_by(asc(sort_col))
+        else:
+            query = query.order_by(desc(sort_col))
+    else:
+        query = query.order_by(desc(Submission.id))
     total_query = select(func.count()).select_from(query.subquery())
     total = db.execute(total_query).scalar()
-    query = query.order_by(Submission.id.desc())
     result = db.execute(query.offset(skip).limit(limit))
     return {"total": total, "items": result.scalars().all()}
 

@@ -12,3 +12,7 @@ psycopg2-binary
 email-validator 
 mangum
 bleach 
+python-jose
+passlib[bcrypt]
+slowapi
+boto3 

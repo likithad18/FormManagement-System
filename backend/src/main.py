@@ -11,6 +11,12 @@ from .database import Base, engine
 from .models import Submission  # Import all models to register them with Base
 import time
 from starlette.responses import Response
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 app = FastAPI()
 
@@ -28,6 +34,10 @@ app.include_router(submissions_router)
 Base.metadata.create_all(bind=engine)
 
 logger = logging.getLogger("app")
+
+# Rate Limiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -53,6 +63,21 @@ async def log_requests(request: Request, call_next):
         response = Response(content=resp_body, status_code=response.status_code, headers=dict(response.headers), media_type=response.media_type)
 
     return response
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
+    return response
+
+# Uncomment to enforce HTTPS in production
+# app.add_middleware(HTTPSRedirectMiddleware)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

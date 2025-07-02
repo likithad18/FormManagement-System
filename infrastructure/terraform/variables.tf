@@ -31,4 +31,9 @@ variable "db_url" {
   description = "Database URL for Lambda environment"
   type        = string
   sensitive   = true
+}
+
+variable "vpc_id" {
+  description = "VPC ID for RDS and Lambda security groups"
+  type        = string
 } 

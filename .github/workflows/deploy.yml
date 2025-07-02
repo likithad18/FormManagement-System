@@ -64,3 +64,6 @@ jobs:
 
       - name: Run alembic upgrade
         run: docker-compose exec backend alembic upgrade head 
+
+# Add a job to trigger rollback manually if needed
+# (No changes to main deploy job, but reference rollback workflow in README or docs) 

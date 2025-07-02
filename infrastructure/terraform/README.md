@@ -25,3 +25,24 @@ This directory contains Terraform code to provision AWS resources for the Form M
 ## Outputs
 - S3 bucket name
 - RDS endpoint, DB name, and user 
+
+## IAM Collaborator Setup
+
+This Terraform config creates IAM users for:
+- saisrigoutham.gadi@cyndx.com
+- jerome.caisip-ext@cyndx.com
+
+Each user is granted read-only access to:
+- CloudWatch logs and metrics
+- Lambda function configurations
+- RDS instance monitoring
+- S3 bucket contents (read-only)
+- API Gateway configurations
+
+**To retrieve their credentials:**
+- After `terraform apply`, go to the AWS IAM console, select the user, and create access keys (send securely to the user).
+- Optionally, use Terraform output to display access key/secret (not recommended for production).
+
+## Resource Tagging & Cost Tracking
+
+All AWS resources are tagged with `Project`, `Environment`, and `Owner` for cost tracking and management. Use AWS Cost Explorer to filter by these tags and monitor usage. 

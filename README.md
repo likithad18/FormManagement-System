@@ -1,3 +1,6 @@
+[![Test and Lint](https://github.com/likithad18/FormManagement-System/actions/workflows/test.yml/badge.svg)](https://github.com/likithad18/FormManagement-System/actions/workflows/test.yml)
+[![Deploy to AWS](https://github.com/likithad18/FormManagement-System/actions/workflows/deploy.yml/badge.svg)](https://github.com/likithad18/FormManagement-System/actions/workflows/deploy.yml)
+
 # Form Management System
 
 A full-stack AWS-powered form management system built with React, FastAPI, PostgreSQL, and Terraform.
@@ -133,4 +136,43 @@ Outputs include S3 bucket name, RDS endpoint, DB name, and user.
 
 ## More
 
-- Setup instructions, architecture diagrams, and cost optimization details coming soon. 
+- Setup instructions, architecture diagrams, and cost optimization details coming soon.
+
+---
+
+## Architecture Diagram
+
+See `docs/architecture.png` (add your diagram here) for an overview of the AWS resources and CI/CD flow.
+
+---
+
+## Cost Optimization Strategies
+- All compute is serverless (Lambda, API Gateway) for pay-per-use.
+- RDS uses t3.micro (free tier eligible) for dev.
+- S3 and CloudFront use free tier limits for static hosting.
+- All resources are tagged for cost tracking (see infrastructure/terraform/README.md).
+- Use AWS Cost Explorer to monitor tagged resources.
+
+---
+
+## Monitoring & Logging
+- CloudWatch is enabled for Lambda, API Gateway, and RDS.
+- Logs are retained for 3 days by default (configurable in Terraform).
+- Set up CloudWatch alarms for error rates and billing alerts (see AWS docs).
+
+---
+
+## IAM & Collaborator Setup
+- See `infrastructure/terraform/README.md` for instructions on adding IAM users and granting read-only access to collaborators.
+
+---
+
+## Test Coverage & Frontend Tests
+- Backend: Test coverage is enforced in CI (see `.github/workflows/test.yml`).
+- Frontend: Add tests with Jest/React Testing Library and document in `frontend/README.md`.
+
+---
+
+## Resource Tagging & Cost Tracking
+- All AWS resources are tagged with `Project`, `Environment`, and `Owner`.
+- Use AWS Cost Explorer to filter and monitor costs by tag. 

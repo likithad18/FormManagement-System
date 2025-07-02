@@ -4,9 +4,9 @@ from .database import Base
 class Submission(Base):
     __tablename__ = "submissions"
     id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, unique=True)
-    phone_number = Column(String(20), nullable=False)
+    full_name = Column(String(255), nullable=False, index=True)
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    phone_number = Column(String(20), nullable=False, index=True)
     age = Column(Integer, nullable=False)
     address = Column(Text)
     preferred_contact = Column(String(20), nullable=False)
