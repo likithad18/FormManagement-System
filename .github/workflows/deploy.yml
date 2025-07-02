@@ -1,0 +1,66 @@
+name: Deploy to AWS with Terraform
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Build backend Lambda package
+        run: |
+          cd backend
+          pip install -r requirements.txt -t package
+          cp -r src/* package/
+          cd package
+          zip -r ../lambda_payload.zip .
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+      
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.9 # Or latest
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+        working-directory: ./infrastructure/terraform
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply -auto-approve \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}"
+        working-directory: ./infrastructure/terraform 
+
+      - name: Run alembic upgrade
+        run: docker-compose exec backend alembic upgrade head 

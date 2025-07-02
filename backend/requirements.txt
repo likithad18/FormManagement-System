@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic
+pytest
+pytest-asyncio
+httpx
+python-dotenv 
+psycopg2-binary
+email-validator 
+mangum
+bleach 

@@ -1,0 +1,139 @@
+#root {
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+  background: #f7f7fa;
+}
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 2rem;
+}
+h1 {
+  text-align: center;
+}
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.form input, .form textarea, .form select {
+  flex: 1 1 200px;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.form button {
+  padding: 0.5rem 1rem;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.form button[type="button"] {
+  background: #aaa;
+}
+.error {
+  color: #fff;
+  background: #d32f2f;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+.message {
+  color: #fff;
+  background: #388e3c;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+.search {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafbfc;
+}
+.table th, .table td {
+  padding: 0.5rem;
+  border: 1px solid #eee;
+  text-align: left;
+}
+.table th {
+  background: #f0f0f0;
+}
+.table button {
+  margin-right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 3px;
+  background: #1976d2;
+  color: #fff;
+  cursor: pointer;
+}
+.table button:last-child {
+  background: #d32f2f;
+}
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+  }
+  .form {
+    flex-direction: column;
+  }
+  .table th, .table td {
+    font-size: 0.9rem;
+  }
+}
