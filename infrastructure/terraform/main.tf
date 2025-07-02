@@ -30,9 +30,11 @@ variable "owner" {
   default     = "likithad18"
 }
 
-# S3 bucket for frontend static hosting
+# =============================
+# S3 Bucket for Frontend Hosting (5GB free tier)
+# =============================
 resource "aws_s3_bucket" "frontend" {
-  bucket = var.s3_bucket_name
+  bucket        = var.s3_bucket_name
   force_destroy = true
   tags = {
     Project     = var.project_name
@@ -64,13 +66,15 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   })
 }
 
-# PostgreSQL RDS instance
+# =============================
+# RDS PostgreSQL Instance (t3.micro or t4g.micro for dev, free tier eligible)
+# =============================
 resource "aws_db_instance" "formdb" {
   allocated_storage    = 20
   engine               = "postgres"
-  engine_version       = "15.3"
-  instance_class       = "db.t3.micro"
-  name                 = var.db_name
+  engine_version       = "15.10-R2"
+  instance_class       = var.rds_instance_class # t3.micro or t4g.micro for dev
+  identifier           = var.db_name
   username             = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
   password             = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
   parameter_group_name = "default.postgres15"
@@ -83,6 +87,7 @@ resource "aws_db_instance" "formdb" {
     Owner       = var.owner
   }
 }
+# For production, consider Aurora Serverless for variable workloads.
 
 resource "aws_security_group" "rds" {
   name        = "formdb-sg"
@@ -145,11 +150,6 @@ resource "aws_cloudwatch_dashboard" "main" {
       }
     ]
   })
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_sns_topic" "alerts" {

@@ -10,31 +10,16 @@ resource "aws_iam_role" "lambda_exec" {
       }
     }]
   })
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_cloudwatch_log_group" "lambda_backend" {
   name              = "/aws/lambda/${aws_lambda_function.backend.function_name}"
   retention_in_days = 3
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_lambda_function" "backend" {
@@ -50,23 +35,12 @@ resource "aws_lambda_function" "backend" {
       SECRETS_MANAGER_ARN = aws_secretsmanager_secret.db_credentials.arn
     }
   }
-  depends_on = [aws_cloudwatch_log_group.lambda_backend]
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 # API Gateway HTTP API
 resource "aws_apigatewayv2_api" "api" {
   name          = "form-api"
   protocol_type = "HTTP"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
@@ -75,33 +49,18 @@ resource "aws_apigatewayv2_integration" "lambda" {
   integration_uri        = aws_lambda_function.backend.invoke_arn
   integration_method     = "POST"
   payload_format_version = "2.0"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_apigatewayv2_route" "proxy" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.api.id
   name        = "$default"
   auto_deploy = true
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_lambda_permission" "apigw" {
@@ -110,29 +69,14 @@ resource "aws_lambda_permission" "apigw" {
   function_name = aws_lambda_function.backend.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_user" "saisrigoutham" {
   name = "saisrigoutham.gadi"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_user" "jerome" {
   name = "jerome.caisip-ext"
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_policy" "readonly_access" {
@@ -164,31 +108,16 @@ resource "aws_iam_policy" "readonly_access" {
       }
     ]
   })
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_user_policy_attachment" "saisrigoutham_readonly" {
   user       = aws_iam_user.saisrigoutham.name
   policy_arn = aws_iam_policy.readonly_access.arn
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_user_policy_attachment" "jerome_readonly" {
   user       = aws_iam_user.jerome.name
   policy_arn = aws_iam_policy.readonly_access.arn
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_policy" "lambda_secrets_access" {
@@ -204,19 +133,9 @@ resource "aws_iam_policy" "lambda_secrets_access" {
       }
     ]
   })
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_secrets_access" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = aws_iam_policy.lambda_secrets_access.arn
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    Owner       = var.owner
-  }
 } 

@@ -7,11 +7,12 @@ output "rds_endpoint" {
 }
 
 output "db_name" {
-  value = aws_db_instance.formdb.name
+  value = aws_db_instance.formdb.identifier
 }
 
 output "db_user" {
-  value = aws_db_instance.formdb.username
+  value     = aws_db_instance.formdb.username
+  sensitive = true
 }
 
 output "cloudfront_domain_name" {

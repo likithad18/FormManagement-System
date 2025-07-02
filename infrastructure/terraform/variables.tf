@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy to"
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 
 variable "s3_bucket_name" {
@@ -36,4 +36,16 @@ variable "db_url" {
 variable "vpc_id" {
   description = "VPC ID for RDS and Lambda security groups"
   type        = string
+}
+
+variable "rds_instance_class" {
+  description = "RDS instance class (t3.micro or t4g.micro for dev, use reserved or Aurora Serverless for prod)"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "cost_center" {
+  description = "Cost center for tagging and cost tracking"
+  type        = string
+  default     = "IT"
 } 
