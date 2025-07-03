@@ -1,3 +1,4 @@
+from dotenv import load_dotenv; load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import router as submissions_router
@@ -7,7 +8,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from .database import Base, engine
+from .database import Base, engine, SQLALCHEMY_DATABASE_URL
 from .models import Submission  # Import all models to register them with Base
 import time
 from starlette.responses import Response
@@ -17,6 +18,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from .deps import limiter
 
 app = FastAPI()
 
@@ -33,10 +35,11 @@ app.include_router(submissions_router)
 # Create all tables at startup
 Base.metadata.create_all(bind=engine)
 
+print(f"[Startup] Using database URL: {SQLALCHEMY_DATABASE_URL}")
+
 logger = logging.getLogger("app")
 
 # Rate Limiter
-limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 
 @app.middleware("http")

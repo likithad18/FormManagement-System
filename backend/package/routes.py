@@ -5,7 +5,6 @@ from . import crud, schemas, deps
 from .schemas import PaginatedSubmissions
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from slowapi import Limiter
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
@@ -13,6 +12,7 @@ from .auth import verify_password, get_password_hash, create_access_token, creat
 import boto3
 import os
 from sqlalchemy import func
+from .deps import limiter
 
 router = APIRouter(prefix="/api/submissions", tags=["submissions"])
 

@@ -31,12 +31,12 @@ jobs:
           pip install -r requirements.txt -t package
           cp -r src/* package/
           cd package
-          zip -r ../lambda_payload.zip .
+          zip -r ../backend-lambda.zip .
 
-      - name: Set up Node.js 18
+      - name: Set up Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Build frontend
         working-directory: ./frontend
@@ -44,6 +44,14 @@ jobs:
           npm install
           npm run build
       
+      - name: Upload frontend to S3
+        run: |
+          aws s3 cp frontend/dist/ s3://lalitha-terraform-20240703-unique/ --recursive
+
+      - name: Upload backend to Lambda
+        run: |
+          aws lambda update-function-code --function-name form-backend-api --zip-file fileb://backend/backend-lambda.zip
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -62,8 +70,3 @@ jobs:
             -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}"
         working-directory: ./infrastructure/terraform 
 
-      - name: Run alembic upgrade
-        run: docker-compose exec backend alembic upgrade head 
-
-# Add a job to trigger rollback manually if needed
-# (No changes to main deploy job, but reference rollback workflow in README or docs) 

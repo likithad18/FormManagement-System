@@ -1,5 +1,8 @@
 from sqlalchemy import Column, Integer, String, Text, CheckConstraint, TIMESTAMP, func
-from .database import Base
+try:
+    from .database import Base
+except ImportError:
+    from database import Base
 
 class Submission(Base):
     __tablename__ = "submissions"
