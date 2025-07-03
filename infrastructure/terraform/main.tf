@@ -174,6 +174,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       }
     ]
   })
+  # NOTE: Lambda handler is now 'src.main.handler' (see lambda.tf)
 }
 
 resource "aws_sns_topic" "alerts" {

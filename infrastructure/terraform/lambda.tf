@@ -20,12 +20,16 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 resource "aws_cloudwatch_log_group" "lambda_backend" {
   name              = "/aws/lambda/${aws_lambda_function.backend.function_name}"
   retention_in_days = 3
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes  = [name]
+  }
 }
 
 resource "aws_lambda_function" "backend" {
   function_name = "form-backend-api"
   role          = aws_iam_role.lambda_exec.arn
-  handler       = "main.handler" # To be updated with actual handler
+  handler       = "src.main.handler"
   runtime       = "python3.10"
   filename      = "../../backend/backend-lambda.zip"
   source_code_hash = filebase64sha256("../../backend/backend-lambda.zip")
@@ -139,4 +143,11 @@ resource "aws_iam_policy" "lambda_secrets_access" {
 resource "aws_iam_role_policy_attachment" "lambda_secrets_access" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = aws_iam_policy.lambda_secrets_access.arn
-} 
+}
+
+# If your secret is created outside this workspace, use a data source:
+# data "aws_secretsmanager_secret" "db_credentials" {
+#   name = "form-db-credentials"
+# }
+# And reference:
+# Resource = data.aws_secretsmanager_secret.db_credentials.arn 
