@@ -1,5 +1,5 @@
 import os
-os.environ["TEST_DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["dTABASE"] = "sqlite:///:memory:"
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 import pytest
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 # Use a test database URL
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://formuser:formpass@db:5432/formdb")
+dTABASE = os.getenv("dTABASE", "postgresql+asyncpg://formuser:formpass@db:5432/formdb")
 
 @pytest.fixture(scope="module", autouse=True)
 async def setup_db():

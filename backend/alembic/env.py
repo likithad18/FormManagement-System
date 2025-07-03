@@ -5,8 +5,10 @@ from alembic import context
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-from database import Base, DATABASE_URL
+from database import Base, SQLALCHEMY_DATABASE_URL
 from models import Submission
+
+DATABASE_URL = SQLALCHEMY_DATABASE_URL
 
 config = context.config
 fileConfig(config.config_file_name)

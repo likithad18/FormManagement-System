@@ -17,6 +17,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from .deps import limiter
 
 app = FastAPI()
 
@@ -36,7 +37,6 @@ Base.metadata.create_all(bind=engine)
 logger = logging.getLogger("app")
 
 # Rate Limiter
-limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 
 @app.middleware("http")

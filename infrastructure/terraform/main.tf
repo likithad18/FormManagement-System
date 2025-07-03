@@ -72,7 +72,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
 resource "aws_db_instance" "formdb" {
   allocated_storage    = 20
   engine               = "postgres"
-  engine_version       = "15.10-R2"
+  engine_version       = "15.10"
   instance_class       = var.rds_instance_class # t3.micro or t4g.micro for dev
   identifier           = var.db_name
   username             = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
@@ -180,4 +180,31 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
     Environment = var.environment
     Owner       = var.owner
   }
+}
+
+resource "aws_s3_bucket_policy" "frontend_public_read" {
+  bucket = aws_s3_bucket.frontend.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "arn:aws:s3:::${aws_s3_bucket.frontend.id}/*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.frontend]
+}
+
+resource "aws_s3_bucket_public_access_block" "frontend" {
+  bucket                  = aws_s3_bucket.frontend.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 } 

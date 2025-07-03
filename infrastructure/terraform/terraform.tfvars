@@ -1,4 +1,4 @@
-db_password = "lalithaAWSpassword@123"
-db_url = "TO_BE_FILLED_AFTER_RDS_CREATION"
+db_password = "lalithaAWSpassword123"
+db_url = "postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb"
 s3_bucket_name = "lalitha-terraform-20240703-unique"
-vpc_id = "vpc-0ff66e97ed3f79642" 
+vpc_id = "vpc-00c59b484b654cccd" 

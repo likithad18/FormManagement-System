@@ -13,6 +13,8 @@ email-validator
 mangum
 bleach 
 python-jose
-passlib[bcrypt]
+passlib[bcrypt]==1.7.4
+bcrypt<4.0.0
 slowapi
 boto3 
+python-multipart 

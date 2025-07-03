@@ -27,7 +27,7 @@ resource "aws_lambda_function" "backend" {
   role          = aws_iam_role.lambda_exec.arn
   handler       = "main.handler" # To be updated with actual handler
   runtime       = "python3.11"
-  filename      = "../backend-lambda.zip" # You will need to package your FastAPI app
+  filename      = "backend-lambda.zip" # Correct path: ZIP is in current directory
   timeout       = 30
   environment {
     variables = {
