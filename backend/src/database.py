@@ -9,10 +9,6 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "sqlite:///:memory:"
 )
 
-# SQLALCHEMY_DATABASE_URL = "postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb"
-
-# DATABASE=postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb 
-
 # Use connect_args only for SQLite
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
