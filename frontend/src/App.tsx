@@ -221,7 +221,7 @@ function App() {
         <div className="max-w-7xl mx-auto flex-1 flex flex-col py-4 px-1 sm:py-6 sm:px-2 lg:px-8">
           <div className="text-center mb-6 sm:mb-10">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-              <span className="text-green-500 text-center block">Form Management System 4</span>
+              <span className="text-green-500 text-center block">Form Management System</span>
             </h1>
             <p className="mt-2 sm:mt-3 max-w-2xl mx-auto text-base sm:text-xl text-gray-600">
               Manage your form submissions efficiently
