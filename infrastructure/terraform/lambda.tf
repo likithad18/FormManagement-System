@@ -32,8 +32,7 @@ resource "aws_lambda_function" "backend" {
   timeout       = 30
   environment {
     variables = {
-      DATABASE_URL = var.db_url
-      SECRETS_MANAGER_ARN = aws_secretsmanager_secret.db_credentials.arn
+      DATABASE = var.db_url
     }
   }
   depends_on = [null_resource.build_lambda]
