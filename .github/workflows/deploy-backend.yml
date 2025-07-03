@@ -1,0 +1,31 @@
+name: Deploy Backend
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Build backend Lambda package
+        run: |
+          cd backend
+          pip install -r requirements.txt -t package
+          cp -r src/* package/
+          cd package
+          zip -r ../backend-lambda.zip .
+      - name: Upload backend to Lambda
+        run: |
+          aws lambda update-function-code --function-name form-backend-api --zip-file fileb://backend/backend-lambda.zip 
