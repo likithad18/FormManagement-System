@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
 export interface Submission {
   id: number;
@@ -29,25 +29,25 @@ export interface PaginatedSubmissions {
 }
 
 export async function getSubmissions(params?: Record<string, any>) {
-  const res = await axios.get<PaginatedSubmissions>(`${API_BASE}/submissions/`, { params });
+  const res = await axios.get<PaginatedSubmissions>(`${API_BASE}/api/submissions/`, { params });
   return res.data;
 }
 
 export async function getSubmission(id: number) {
-  const res = await axios.get<Submission>(`${API_BASE}/submissions/${id}`);
+  const res = await axios.get<Submission>(`${API_BASE}/api/submissions/${id}`);
   return res.data;
 }
 
 export async function createSubmission(data: SubmissionInput) {
-  const res = await axios.post<Submission>(`${API_BASE}/submissions/`, data);
+  const res = await axios.post<Submission>(`${API_BASE}/api/submissions/`, data);
   return res.data;
 }
 
 export async function updateSubmission(id: number, data: SubmissionInput) {
-  const res = await axios.put<Submission>(`${API_BASE}/submissions/${id}`, data);
+  const res = await axios.put<Submission>(`${API_BASE}/api/submissions/${id}`, data);
   return res.data;
 }
 
 export async function deleteSubmission(id: number) {
-  await axios.delete(`${API_BASE}/submissions/${id}`);
+  await axios.delete(`${API_BASE}/api/submissions/${id}`);
 } 
