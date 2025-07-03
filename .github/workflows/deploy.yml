@@ -51,14 +51,8 @@ jobs:
           aws s3 cp frontend/dist/ s3://lalitha-terraform-20240703-unique/ --recursive
 
       - name: Set Lambda environment variables
-        id: set_env
         run: |
-          DB=$(grep DATABASE backend/.env | cut -d '=' -f2-)
-          if [ -z "$DB" ]; then
-            echo "DATABASE variable is empty! Failing."
-            exit 1
-          fi
-          echo "DATABASE=$DB" >> $GITHUB_ENV
+          echo "DATABASE=postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb" >> $GITHUB_ENV
 
       - name: Upload backend to Lambda
         env:
