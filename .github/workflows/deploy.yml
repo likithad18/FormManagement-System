@@ -54,21 +54,4 @@ jobs:
         run: |
           aws lambda update-function-code --function-name form-backend-api --zip-file fileb://backend/backend-lambda.zip
 
-      # - name: Set up Terraform
-      #   uses: hashicorp/setup-terraform@v2
-      #   with:
-      #     terraform_version: 1.3.0 
-
-      # - name: Terraform Init
-      #   id: init
-      #   run: terraform init
-      #   working-directory: ./infrastructure/terraform
-
-      # - name: Terraform Apply
-      #   id: apply
-      #   run: |
-      #     terraform apply -auto-approve \
-      #       -var="db_password=${{ secrets.DB_PASSWORD }}" \
-      #       -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}"
-      #   working-directory: ./infrastructure/terraform 
-
+    
