@@ -30,6 +30,7 @@ jobs:
           cd backend
           pip install -r requirements.txt -t package
           cp -r src/* package/
+          ls -l package/pydantic_core || echo "pydantic_core directory not found"
           cd package
           zip -r ../backend-lambda.zip .
 
