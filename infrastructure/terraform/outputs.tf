@@ -36,4 +36,14 @@ output "iam_user_saisrigoutham_arn" {
 
 output "iam_user_jerome_arn" {
   value = aws_iam_user.jerome.arn
+}
+
+output "saisrigoutham_temp_password" {
+  value     = aws_iam_user_login_profile.saisrigoutham_login.encrypted_password
+  sensitive = true
+}
+
+output "jerome_temp_password" {
+  value     = aws_iam_user_login_profile.jerome_login.encrypted_password
+  sensitive = true
 } 

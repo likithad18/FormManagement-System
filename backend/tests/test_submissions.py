@@ -1,206 +1,135 @@
 import os
-os.environ["dTABASE"] = "sqlite:///:memory:"
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../.env'))
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 import pytest
-from httpx import AsyncClient
+from fastapi.testclient import TestClient
 from src.main import app
-from src.database import Base, engine
-import asyncio
-import sqlalchemy
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from src.database import Base, get_db, SQLALCHEMY_DATABASE_URL
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Use a test database URL
-dTABASE = os.getenv("dTABASE", "postgresql+asyncpg://formuser:formpass@db:5432/formdb")
+client = TestClient(app)
 
-@pytest.fixture(scope="module", autouse=True)
-async def setup_db():
-    # Create tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+# Use the same DB URL as your app, but make sure it's a test DB!
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_database():
+    Base.metadata.create_all(bind=engine)
     yield
-    # Drop tables after tests
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    Base.metadata.drop_all(bind=engine)
 
-@pytest.mark.asyncio
-async def test_create_and_get_submission():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        data = {
-            "full_name": "John Doe",
-            "email": "john@example.com",
-            "phone_number": "1234567890",
-            "age": 30,
-            "address": "123 Main St",
-            "preferred_contact": "Email"
-        }
-        # Create
-        resp = await ac.post("/api/submissions/", json=data)
-        assert resp.status_code == 201
-        result = resp.json()
-        assert result["full_name"] == data["full_name"]
-        submission_id = result["id"]
-        # Get
-        resp = await ac.get(f"/api/submissions/{submission_id}")
-        assert resp.status_code == 200
-        assert resp.json()["email"] == data["email"]
+@pytest.fixture(scope="function", autouse=True)
+def db_session():
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
+    yield session
+    session.close()
+    transaction.rollback()
+    connection.close()
 
-@pytest.mark.asyncio
-async def test_list_submissions():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        resp = await ac.get("/api/submissions/")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "total" in data
-        assert "items" in data
-        assert isinstance(data["items"], list)
+@pytest.fixture(autouse=True)
+def override_get_db(db_session):
+    app.dependency_overrides[get_db] = lambda: db_session
 
-@pytest.mark.asyncio
-async def test_list_submissions_pagination_and_search():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        # Create multiple submissions
-        for i in range(5):
-            await ac.post("/api/submissions/", json={
-                "full_name": f"Paginate User {i}",
-                "email": f"paginate{i}@example.com",
-                "phone_number": f"100000000{i}",
-                "age": 20 + i,
-                "address": f"{i} Main St",
-                "preferred_contact": "Email"
-            })
-        # Test pagination
-        resp = await ac.get("/api/submissions/?skip=0&limit=2")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert len(data["items"]) <= 2
-        # Test search
-        resp = await ac.get("/api/submissions/?search=Paginate User 1")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert any("Paginate User 1" in item["full_name"] for item in data["items"])
+# Helper for consistent payloads
+def make_submission_payload(email="test@example.com"):
+    return {
+        "full_name": "Test User",
+        "email": email,
+        "phone_number": "+1234567890",
+        "age": 30,
+        "address": "123 Test St",
+        "preferred_contact": "Email"
+    }
 
-@pytest.mark.asyncio
-async def test_duplicate_email_create():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        data = {
-            "full_name": "Dup Email",
-            "email": "dup@example.com",
-            "phone_number": "1231231234",
-            "age": 30,
-            "address": "Dup St",
-            "preferred_contact": "Email"
-        }
-        resp1 = await ac.post("/api/submissions/", json=data)
-        assert resp1.status_code == 201
-        resp2 = await ac.post("/api/submissions/", json=data)
-        assert resp2.status_code == 400
-        assert "Duplicate email" in str(resp2.json())
+def test_create_and_get_submission():
+    payload = make_submission_payload("john@example.com")
+    resp = client.post("/api/submissions/", json=payload)
+    assert resp.status_code == 201
+    result = resp.json()
+    assert result["full_name"] == payload["full_name"]
+    submission_id = result["id"]
+    # Get
+    resp = client.get(f"/api/submissions/{submission_id}")
+    assert resp.status_code == 200
+    assert resp.json()["email"] == payload["email"]
 
-@pytest.mark.asyncio
-async def test_duplicate_email_update():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        # Create two submissions
-        data1 = {
-            "full_name": "User One",
-            "email": "userone@example.com",
-            "phone_number": "1111111111",
-            "age": 22,
-            "address": "One St",
-            "preferred_contact": "Email"
-        }
-        data2 = {
-            "full_name": "User Two",
-            "email": "usertwo@example.com",
-            "phone_number": "2222222222",
-            "age": 23,
-            "address": "Two St",
-            "preferred_contact": "Phone"
-        }
-        resp1 = await ac.post("/api/submissions/", json=data1)
-        id1 = resp1.json()["id"]
-        resp2 = await ac.post("/api/submissions/", json=data2)
-        id2 = resp2.json()["id"]
-        # Try to update user two to have user one's email
-        update_data = data2.copy()
-        update_data["email"] = data1["email"]
-        resp = await ac.put(f"/api/submissions/{id2}", json=update_data)
-        assert resp.status_code == 400
-        assert "Duplicate email" in str(resp.json())
+def test_list_submissions():
+    resp = client.get("/api/submissions/")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "total" in data
+    assert "items" in data
+    assert isinstance(data["items"], list)
 
-@pytest.mark.asyncio
-async def test_update_validation_errors():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        # Create a valid submission
-        data = {
-            "full_name": "Valid User",
-            "email": "validuser@example.com",
-            "phone_number": "3333333333",
-            "age": 30,
-            "address": "Valid St",
-            "preferred_contact": "Both"
-        }
-        resp = await ac.post("/api/submissions/", json=data)
-        submission_id = resp.json()["id"]
-        # Try to update with invalid data
-        update_data = data.copy()
-        update_data["age"] = 10  # Invalid age
-        update_data["preferred_contact"] = "Invalid"
-        resp = await ac.put(f"/api/submissions/{submission_id}", json=update_data)
-        assert resp.status_code == 422
+def test_list_submissions_pagination_and_search():
+    # Create multiple submissions
+    for i in range(5):
+        client.post("/api/submissions/", json=make_submission_payload(f"paginate{i}@example.com"))
+    # Test pagination
+    resp = client.get("/api/submissions/?skip=0&limit=2")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["items"]) <= 2
+    # Test search
+    resp = client.get("/api/submissions/?search=Test User")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert any("Test User" in item["full_name"] for item in data["items"])
 
-@pytest.mark.asyncio
-async def test_update_submission():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        # Create
-        data = {
-            "full_name": "Jane Doe",
-            "email": "jane@example.com",
-            "phone_number": "0987654321",
-            "age": 25,
-            "address": "456 Main St",
-            "preferred_contact": "Phone"
-        }
-        resp = await ac.post("/api/submissions/", json=data)
-        submission_id = resp.json()["id"]
-        # Update
-        update_data = data.copy()
-        update_data["age"] = 26
-        resp = await ac.put(f"/api/submissions/{submission_id}", json=update_data)
-        assert resp.status_code == 200
-        assert resp.json()["age"] == 26
+def test_duplicate_email_create():
+    payload = make_submission_payload("dup@example.com")
+    resp1 = client.post("/api/submissions/", json=payload)
+    assert resp1.status_code == 201
+    resp2 = client.post("/api/submissions/", json=payload)
+    assert resp2.status_code == 400
+    assert "Duplicate email" in str(resp2.json())
 
-@pytest.mark.asyncio
-async def test_delete_submission():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        # Create
-        data = {
-            "full_name": "Delete Me",
-            "email": "delete@example.com",
-            "phone_number": "1112223333",
-            "age": 40,
-            "address": "789 Main St",
-            "preferred_contact": "Both"
-        }
-        resp = await ac.post("/api/submissions/", json=data)
-        submission_id = resp.json()["id"]
-        # Delete
-        resp = await ac.delete(f"/api/submissions/{submission_id}")
-        assert resp.status_code == 204
-        # Confirm deletion
-        resp = await ac.get(f"/api/submissions/{submission_id}")
-        assert resp.status_code == 404
+def test_update_validation_errors():
+    payload = make_submission_payload("validuser@example.com")
+    resp = client.post("/api/submissions/", json=payload)
+    submission_id = resp.json()["id"]
+    update_data = payload.copy()
+    update_data["age"] = 10  
+    update_data["preferred_contact"] = "Invalid"
+    resp = client.put(f"/api/submissions/{submission_id}", json=update_data)
+    assert resp.status_code == 422
 
-@pytest.mark.asyncio
-async def test_validation_errors():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        # Missing required field
-        data = {
-            "email": "bad@example.com",
-            "phone_number": "1234567890",
-            "age": 17,
-            "preferred_contact": "Invalid"
-        }
-        resp = await ac.post("/api/submissions/", json=data)
-        assert resp.status_code == 422 
+def test_update_submission():
+    payload = make_submission_payload("jane@example.com")
+    resp = client.post("/api/submissions/", json=payload)
+    submission_id = resp.json()["id"]
+    # Update
+    update_data = payload.copy()
+    update_data["age"] = 26
+    resp = client.put(f"/api/submissions/{submission_id}", json=update_data)
+    assert resp.status_code == 200
+    assert resp.json()["age"] == 26
+
+def test_delete_submission():
+    payload = make_submission_payload("delete@example.com")
+    resp = client.post("/api/submissions/", json=payload)
+    submission_id = resp.json()["id"]
+    # Delete
+    resp = client.delete(f"/api/submissions/{submission_id}")
+    assert resp.status_code == 204
+    # Confirm deletion
+    resp = client.get(f"/api/submissions/{submission_id}")
+    assert resp.status_code == 404
+
+def test_validation_errors():
+    # Missing required field
+    data = {
+        "email": "bad@example.com",
+        "phone_number": "+1234567890",
+        "age": 17,
+        "preferred_contact": "Invalid"
+    }
+    resp = client.post("/api/submissions/", json=data)
+    assert resp.status_code == 422
+    # print('Ballllllllll',resp.json())

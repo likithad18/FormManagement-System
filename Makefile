@@ -6,7 +6,7 @@ BACKEND_DIR=backend
 S3_BUCKET=lalitha-terraform-20240703-unique
 LAMBDA_ZIP=backend-lambda.zip
 
-.PHONY: all frontend backend upload-frontend upload-backend clean validate plan apply set-api-base build-frontend-with-api deploy-all
+.PHONY: all frontend backend upload-frontend upload-backend clean validate plan apply set-api-base build-frontend-with-api deploy-all backend-test-cov
 
 all: frontend backend
 
@@ -48,4 +48,7 @@ build-frontend-with-api:
 
 deploy-all:
 	make build-frontend-with-api
-	cd infrastructure/terraform && terraform apply -auto-approve 
+	cd infrastructure/terraform && terraform apply -auto-approve
+
+backend-test-cov:
+	cd $(BACKEND_DIR) && pytest --cov=src tests 

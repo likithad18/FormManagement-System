@@ -78,20 +78,38 @@ resource "aws_lambda_permission" "apigw" {
 
 resource "aws_iam_user" "saisrigoutham" {
   name = "saisrigoutham.gadi"
+  tags = {
+    Email = "saisrigoutham.gadi@cyndx.com"
+  }
 }
 
 resource "aws_iam_user" "jerome" {
   name = "jerome.caisip-ext"
+  tags = {
+    Email = "jerome.caisip-ext@cyndx.com"
+  }
 }
 
-resource "aws_iam_policy" "readonly_access" {
-  name        = "FormAppReadOnlyAccess"
-  description = "Read-only access to CloudWatch, Lambda, RDS, S3, and API Gateway."
-  policy      = jsonencode({
-    Version = "2012-10-17",
+resource "aws_iam_user_login_profile" "saisrigoutham_login" {
+  user                    = aws_iam_user.saisrigoutham.name
+  password_length         = 20
+  password_reset_required = true
+}
+
+resource "aws_iam_user_login_profile" "jerome_login" {
+  user                    = aws_iam_user.jerome.name
+  password_length         = 20
+  password_reset_required = true
+}
+
+resource "aws_iam_policy" "read_only_monitoring" {
+  name        = "ReadOnlyMonitoringAccess"
+  description = "Provides read-only access to CloudWatch, Lambda, RDS, S3, and API Gateway"
+  policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow",
+        Effect = "Allow"
         Action = [
           "cloudwatch:Describe*",
           "cloudwatch:Get*",
@@ -99,30 +117,31 @@ resource "aws_iam_policy" "readonly_access" {
           "logs:Describe*",
           "logs:Get*",
           "logs:List*",
-          "lambda:List*",
+          "logs:StartLiveTail",
+          "logs:TestMetricFilter",
           "lambda:Get*",
+          "lambda:List*",
+          "lambda:Describe*",
           "rds:Describe*",
           "rds:List*",
           "s3:Get*",
           "s3:List*",
-          "apigateway:GET",
-          "apigateway:GET*",
-          "apigateway:Describe*"
-        ],
+          "apigateway:GET"
+        ]
         Resource = "*"
       }
     ]
   })
 }
 
-resource "aws_iam_user_policy_attachment" "saisrigoutham_readonly" {
+resource "aws_iam_user_policy_attachment" "saisrigoutham_attach" {
   user       = aws_iam_user.saisrigoutham.name
-  policy_arn = aws_iam_policy.readonly_access.arn
+  policy_arn = aws_iam_policy.read_only_monitoring.arn
 }
 
-resource "aws_iam_user_policy_attachment" "jerome_readonly" {
+resource "aws_iam_user_policy_attachment" "jerome_attach" {
   user       = aws_iam_user.jerome.name
-  policy_arn = aws_iam_policy.readonly_access.arn
+  policy_arn = aws_iam_policy.read_only_monitoring.arn
 }
 
 resource "aws_iam_policy" "lambda_secrets_access" {
