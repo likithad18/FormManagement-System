@@ -50,8 +50,15 @@ jobs:
         run: |
           aws s3 cp frontend/dist/ s3://lalitha-terraform-20240703-unique/ --recursive
 
+      - name: Set Lambda environment variables
+        run: |
+          echo "DATABASE=$(grep DATABASE backend/.env | cut -d '=' -f2-)" >> $GITHUB_ENV
+
       - name: Upload backend to Lambda
+        env:
+          DATABASE: ${{ env.DATABASE }}
         run: |
           aws lambda update-function-code --function-name form-backend-api --zip-file fileb://backend/backend-lambda.zip
+          aws lambda update-function-configuration --function-name form-backend-api --environment "Variables={DATABASE=${{ env.DATABASE }}}"
 
     

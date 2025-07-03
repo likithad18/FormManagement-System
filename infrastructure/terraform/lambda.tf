@@ -26,7 +26,7 @@ resource "aws_lambda_function" "backend" {
   function_name = "form-backend-api"
   role          = aws_iam_role.lambda_exec.arn
   handler       = "main.handler" # To be updated with actual handler
-  runtime       = "python3.11"
+  runtime       = "python3.10"
   filename      = "../../backend/backend-lambda.zip"
   source_code_hash = filebase64sha256("../../backend/backend-lambda.zip")
   timeout       = 30
