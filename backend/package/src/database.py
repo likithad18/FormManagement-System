@@ -4,14 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# SQLALCHEMY_DATABASE_URL = os.getenv(
-#     "DATABASE",
-#     "sqlite:///:memory:"
-# )
-
-SQLALCHEMY_DATABASE_URL = "postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb"
-
-# DATABASE=postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb 
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE",
+    "sqlite:///:memory:"
+)
 
 # Use connect_args only for SQLite
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):

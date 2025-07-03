@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "$0")"
+
 echo "🧹 Cleaning previous build..."
 rm -rf package backend-lambda.zip
 
