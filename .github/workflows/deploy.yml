@@ -59,6 +59,20 @@ jobs:
           DATABASE: ${{ env.DATABASE }}
         run: |
           aws lambda update-function-code --function-name form-backend-api --zip-file fileb://backend/backend-lambda.zip
+
+          # Wait for the update to finish
+          for i in {1..10}; do
+            STATUS=$(aws lambda get-function-configuration --function-name form-backend-api --query 'LastUpdateStatus' --output text)
+            echo "Lambda update status: $STATUS"
+            if [ "$STATUS" = "Successful" ]; then
+              break
+            elif [ "$STATUS" = "Failed" ]; then
+              echo "Lambda update failed!"
+              exit 1
+            fi
+            sleep 5
+          done
+
           aws lambda update-function-configuration --function-name form-backend-api --environment "Variables={DATABASE=\"$DATABASE\"}"
 
     
