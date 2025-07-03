@@ -265,4 +265,16 @@ resource "null_resource" "upload_frontend" {
     command = "aws s3 cp ../../frontend/dist/ s3://${aws_s3_bucket.frontend.bucket}/ --recursive"
   }
   depends_on = [null_resource.build_frontend, aws_s3_bucket.frontend]
+}
+
+resource "null_resource" "create_formdb" {
+  provisioner "local-exec" {
+    command = <<EOT
+PGPASSWORD='${var.db_password}' psql -h ${aws_db_instance.formdb.address} -U ${var.db_user} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${var.db_name}'" | grep -q 1 || PGPASSWORD='${var.db_password}' psql -h ${aws_db_instance.formdb.address} -U ${var.db_user} -d postgres -c "CREATE DATABASE \"${var.db_name}\" OWNER \"${var.db_user}\";"
+EOT
+  }
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+  depends_on = [aws_db_instance.formdb]
 } 

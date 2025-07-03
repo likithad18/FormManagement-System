@@ -1,4 +1,6 @@
 db_password = "lalithaAWSpassword123"
+db_name = "formdb"
+db_user = "formuser"
 db_url = "postgresql://formuser:lalithaAWSpassword123@formdb.cv84o8iymmz6.us-east-2.rds.amazonaws.com:5432/formdb"
 s3_bucket_name = "lalitha-terraform-20240703-unique"
 vpc_id = "vpc-00c59b484b654cccd" 
