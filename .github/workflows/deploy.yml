@@ -40,6 +40,8 @@ jobs:
 
       - name: Build frontend
         working-directory: ./frontend
+        env:
+          VITE_API_BASE: 'https://r9aa5u91x5.execute-api.us-east-2.amazonaws.com'
         run: |
           npm install
           npm run build
