@@ -50,11 +50,14 @@ resource "aws_s3_bucket" "frontend" {
 # Then reference secret in Lambda and RDS environment/parameter.
 
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name = "formdb-credentials"
+  name = "formdb-credentials-NEW-3"
   tags = {
     Project     = var.project_name
     Environment = var.environment
     Owner       = var.owner
+  }
+  lifecycle {
+    prevent_destroy = false
   }
 }
 
@@ -64,6 +67,9 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
     username = var.db_user,
     password = var.db_password
   })
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 # =============================
@@ -79,31 +85,46 @@ resource "aws_db_instance" "formdb" {
   password             = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
   parameter_group_name = "default.postgres15"
   skip_final_snapshot  = true
-  publicly_accessible  = false
+  publicly_accessible  = true
   vpc_security_group_ids = [aws_security_group.rds.id]
   tags = {
     Project     = var.project_name
     Environment = var.environment
     Owner       = var.owner
   }
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 # For production, consider Aurora Serverless for variable workloads.
 
 resource "aws_security_group" "rds" {
   name        = "formdb-sg"
-  description = "Allow access to RDS only from Lambda"
+  description = "Allow access to RDS from Lambda and public for testing"
   vpc_id      = var.vpc_id
   tags = {
     Project     = var.project_name
     Environment = var.environment
     Owner       = var.owner
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lambda.id]
+  }
+
+  # PUBLIC: Allow access from anywhere (not recommended for production)
   ingress {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    security_groups = [aws_security_group.lambda.id]
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Public access for PostgreSQL. REMOVE for production!"
   }
 
   egress {
@@ -122,6 +143,9 @@ resource "aws_security_group" "lambda" {
     Project     = var.project_name
     Environment = var.environment
     Owner       = var.owner
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -184,12 +208,11 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
 
 resource "aws_s3_bucket_policy" "frontend_public_read" {
   bucket = aws_s3_bucket.frontend.id
-
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Sid       = "PublicReadGetObject"
+        Sid       = "PublicReadGetObject20240703"
         Effect    = "Allow"
         Principal = "*"
         Action    = "s3:GetObject"
@@ -197,7 +220,6 @@ resource "aws_s3_bucket_policy" "frontend_public_read" {
       }
     ]
   })
-
   depends_on = [aws_s3_bucket_public_access_block.frontend]
 }
 
@@ -207,4 +229,40 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+# =============================
+# Build Lambda Package Before Deploy
+# =============================
+resource "null_resource" "build_lambda" {
+  provisioner "local-exec" {
+    command = "bash ../../backend/build_lambda.sh"
+  }
+  triggers = {
+    requirements = filesha256("../../backend/requirements.txt")
+    # You can add more triggers for source files if needed
+  }
+}
+
+# =============================
+# Build Frontend Before Upload
+# =============================
+resource "null_resource" "build_frontend" {
+  provisioner "local-exec" {
+    command = "cd ../../frontend && npm install && npm run build"
+  }
+  triggers = {
+    package = filesha256("../../frontend/package.json")
+    # You can add more triggers for source files if needed
+  }
+}
+
+# =============================
+# Upload Frontend to S3 After Build
+# =============================
+resource "null_resource" "upload_frontend" {
+  provisioner "local-exec" {
+    command = "aws s3 cp ../../frontend/dist/ s3://${aws_s3_bucket.frontend.bucket}/ --recursive"
+  }
+  depends_on = [null_resource.build_frontend, aws_s3_bucket.frontend]
 } 

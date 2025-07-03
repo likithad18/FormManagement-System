@@ -27,7 +27,8 @@ resource "aws_lambda_function" "backend" {
   role          = aws_iam_role.lambda_exec.arn
   handler       = "main.handler" # To be updated with actual handler
   runtime       = "python3.11"
-  filename      = "backend-lambda.zip" # Correct path: ZIP is in current directory
+  filename      = "../../backend/backend-lambda.zip"
+  source_code_hash = filebase64sha256("../../backend/backend-lambda.zip")
   timeout       = 30
   environment {
     variables = {
@@ -35,6 +36,7 @@ resource "aws_lambda_function" "backend" {
       SECRETS_MANAGER_ARN = aws_secretsmanager_secret.db_credentials.arn
     }
   }
+  depends_on = [null_resource.build_lambda]
 }
 
 # API Gateway HTTP API
