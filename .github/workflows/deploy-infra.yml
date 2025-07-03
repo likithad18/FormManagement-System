@@ -1,30 +1,30 @@
-name: Deploy Infrastructure
+# name: Deploy Infrastructure
 
-on:
-  push:
-    paths:
-      - 'infrastructure/terraform/**'
-      - '.github/workflows/deploy-infra.yml'
+# on:
+#   push:
+#     paths:
+#       - 'infrastructure/terraform/**'
+#       - '.github/workflows/deploy-infra.yml'
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.3.0
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./infrastructure/terraform
-      - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" \
-            -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}"
-        working-directory: ./infrastructure/terraform 
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
+#       - uses: hashicorp/setup-terraform@v2
+#         with:
+#           terraform_version: 1.3.0
+#       - name: Terraform Init
+#         run: terraform init
+#         working-directory: ./infrastructure/terraform
+#       - name: Terraform Apply
+#         run: |
+#           terraform apply -auto-approve \
+#             -var="db_password=${{ secrets.DB_PASSWORD }}" \
+#             -var="s3_bucket_name=${{ secrets.S3_BUCKET_NAME }}"
+#         working-directory: ./infrastructure/terraform 
